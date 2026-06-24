@@ -1,0 +1,1 @@
+Это сервис с 3-мя эндпоинтами(/register, /auth, /validate). Сервис спроектирован по принципам чистой архитектуры, для лучшей масштабируемости и для возможности написания автотестов. Тесты находятся в ./internal/service/auth_service_test.go и ./internal/service/handlers/handler_test.go. Тесты запускаются автоматически при git push.
