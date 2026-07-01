@@ -2,7 +2,7 @@ name: wallet
 
 services:
   auth_service_application:
-    build: ./AuthService
+    build: .
     container_name: auth_service_application_container
     ports:
       - "5050:${SERVER_PORT}"
@@ -30,6 +30,16 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  auth_nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:etc/nginx/certs:ro
+    ports:
+      - "443:${NGINX_PORT}"
+    depends_on:
+      - auth_service_application
 
 volumes:
   pgdata_auth_db: {}
