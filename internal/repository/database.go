@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -20,24 +21,16 @@ func NewDB(ctx context.Context, connstring string) (*Database, error) {
 }
 
 func (d *Database) Create(ctx context.Context, user domain.User) error {
-	query0 := `SELECT username
-	FROM Users
-	WHERE username = $1`
-	var foundUser domain.User
-	err := d.conn.QueryRow(ctx, query0, user.Username).Scan(&foundUser.Username)
-	if err == nil {
-		return domain.ErrUserAlreadyExists
-	}
-	if errors.Is(err, pgx.ErrNoRows) {
-		query1 := `INSERT INTO Users (username, password)
+	query1 := `INSERT INTO Users (username, password)
 			VALUES ($1, $2)`
-		if _, err := d.conn.Exec(ctx, query1, user.Username, user.Password); err != nil {
-			return err
+	var pgErr *pgconn.PgError
+	if _, err := d.conn.Exec(ctx, query1, user.Username, user.Password); err != nil {
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+    		return domain.ErrUserAlreadyExists
 		}
-		return nil
-	} else {
 		return err
 	}
+	return nil
 }
 
 func (d *Database) Auth(ctx context.Context, user domain.User) error {
